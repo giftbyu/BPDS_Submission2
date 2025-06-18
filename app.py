@@ -1,9 +1,10 @@
-# app.py (Versi Final dengan Perbaikan Error dan Label yang Mudah Dibaca)
+# app.py (Versi Final dengan Metode Pemuatan Model yang Andal)
 
 import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
+import xgboost as xgb # <-- Tambahkan import xgboost
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
@@ -17,27 +18,32 @@ marital_status_map = {'Single': 1, 'Married': 2, 'Widower': 3, 'Divorced': 4, 'F
 gender_map = {'Male': 1, 'Female': 0}
 boolean_map = {'Yes': 1, 'No': 0}
 
-# --- FUNGSI UNTUK MEMUAT MODEL ---
+# --- FUNGSI UNTUK MEMUAT MODEL & PREPROCESSOR ---
 @st.cache_resource
-def load_model():
+def load_assets():
     try:
-        model = joblib.load('final_dropout_prediction_model.joblib')
-        return model
-    except FileNotFoundError:
-        st.error("File model 'final_dropout_prediction_model.joblib' tidak ditemukan. Pastikan file berada di folder yang sama dengan app.py.")
-        return None
+        preprocessor = joblib.load('preprocessor.joblib')
+        
+        # Muat model XGBoost
+        xgb_model = xgb.XGBClassifier()
+        xgb_model.load_model('xgb_model.json')
+        
+        return preprocessor, xgb_model
+    except FileNotFoundError as e:
+        st.error(f"Error memuat file model: {e}. Pastikan 'preprocessor.joblib' dan 'xgb_model.json' ada di folder yang sama.")
+        return None, None
 
-model = load_model()
+preprocessor, model = load_assets()
 
 # --- TAMPILAN APLIKASI ---
-if model:
+if model and preprocessor:
     st.title("🎓 Sistem Peringatan Dini Dropout Mahasiswa")
     st.markdown("Selamat datang di sistem peringatan dini Jaya Jaya Institut. Masukkan data mahasiswa di bawah untuk mendapatkan prediksi status dan skor risiko.")
 
-    # --- INPUT DARI PENGGUNA DENGAN LABEL TEKS ---
+    # --- INPUT DARI PENGGUNA ---
     st.header("Masukkan Data Mahasiswa")
     col1, col2, col3 = st.columns(3)
-
+    
     with col1:
         st.subheader("Data Akademik")
         curricular_units_1st_sem_grade = st.number_input('Rata-rata Nilai Semester 1 (0-20)', 0.0, 20.0, 12.0, 0.1)
@@ -58,42 +64,48 @@ if model:
 
     # Tombol Prediksi
     if st.button('Analisis Risiko Mahasiswa', type="primary", use_container_width=True):
-        # --- KONVERSI INPUT TEKS KE ANGKA UNTUK MODEL ---
+        # KONVERSI INPUT TEKS KE ANGKA
         tuition_fees_up_to_date = boolean_map[tuition_fees_up_to_date_text]
         scholarship_holder = boolean_map[scholarship_holder_text]
         debtor = boolean_map[debtor_text]
         gender = gender_map[gender_text]
         marital_status = marital_status_map[marital_status_text]
         
-        # --- PERBAIKAN LOGIKA PENYIAPAN DATA ---
-        # 1. Muat data asli untuk mendapatkan daftar kolom & nilai default
+        # Buat dictionary untuk input
+        input_data = {
+            'Marital_status': [marital_status], 'Admission_grade': [admission_grade],
+            'Tuition_fees_up_to_date': [tuition_fees_up_to_date], 'Gender': [gender],
+            'Scholarship_holder': [scholarship_holder], 'Age_at_enrollment': [age_at_enrollment],
+            'Curricular_units_1st_sem_grade': [curricular_units_1st_sem_grade],
+            'Curricular_units_2nd_sem_grade': [curricular_units_2nd_sem_grade], 'Debtor': [debtor]
+        }
+        
+        # Dapatkan daftar lengkap kolom fitur dari preprocessor
+        # Ini lebih andal daripada membaca CSV lagi
+        cat_features = preprocessor.transformers_[1][2]
+        num_features = preprocessor.transformers_[0][2]
+        all_features = num_features + cat_features
+
+        # Isi nilai default untuk fitur yang tidak ada di form
         df_defaults = pd.read_csv('data.csv', delimiter=';')
-
-        # 2. <-- INI BAGIAN YANG DIPERBAIKI -->
-        # Cek apakah kolom 'Status' ada, jika ada, buang. Jika tidak, gunakan apa adanya.
-        if 'Status' in df_defaults.columns:
-            feature_columns = df_defaults.drop('Status', axis=1).columns
-        else:
-            feature_columns = df_defaults.columns
-
-        # 3. Buat dictionary untuk input
-        input_data = {}
-        for col in feature_columns:
-            if col in locals():
-                input_data[col] = [locals()[col]]
-            else:
+        for col in all_features:
+            if col not in input_data:
                 input_data[col] = [df_defaults[col].median()]
         
         input_df = pd.DataFrame(input_data)
-
-        # Lakukan prediksi
-        prediction_encoded = model.predict(input_df)[0]
-        prediction_proba = model.predict_proba(input_df)[0]
+        
+        # --- PROSES PREDIKSI 2 LANGKAH ---
+        # 1. Transformasi data menggunakan preprocessor
+        data_transformed = preprocessor.transform(input_df)
+        
+        # 2. Lakukan prediksi menggunakan model XGBoost
+        prediction_encoded = model.predict(data_transformed)[0]
+        prediction_proba = model.predict_proba(data_transformed)[0]
         
         status_map_decode = {0: 'Dropout', 1: 'Enrolled', 2: 'Graduate'}
         prediction_label = status_map_decode[prediction_encoded]
         
-        # --- TAMPILKAN HASIL PREDIKSI ---
+        # Tampilkan hasil
         st.header("Hasil Analisis")
         res_col1, res_col2 = st.columns(2)
         

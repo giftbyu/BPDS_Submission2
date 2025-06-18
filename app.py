@@ -3,6 +3,25 @@ import pandas as pd
 import joblib
 import numpy as np
 import xgboost as xgb
+
+# --- KONFIGURASI HALAMAN ---
+st.set_page_config(
+    page_title="Prediksi Dropout Mahasiswa | Jaya Jaya Institut",
+    page_icon="🎓",
+    layout="wide"
+)
+
+# --- MAPPING DATA SESUAI README.MD ---
+marital_status_map = {'Single': 1, 'Married': 2, 'Widower': 3, 'Divorced': 4, 'Facto Union': 5, 'Legally Separated': 6}
+gender_map = {'Male': 1, 'Female': 0}
+boolean_map = {'Yes': 1, 'No': 0}
+
+# --- FUNGSI UNTUK MEMUAT MODEL & PREPROCESSOR ---
+import streamlit as st
+import pandas as pd
+import joblib
+import numpy as np
+import xgboost as xgb
 import os  # Tambahkan untuk penanganan path
 
 # --- KONFIGURASI HALAMAN ---

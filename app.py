@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
-import xgboost as xgb # <-- Tambahkan import xgboost
+import xgboost as xgb
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(

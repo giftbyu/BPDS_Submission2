@@ -20,15 +20,15 @@ boolean_map = {'Yes': 1, 'No': 0}
 @st.cache_resource
 def load_assets():
     try:
+        # Gunakan path relatif dengan forward slash, atau langsung nama file jika satu folder
         preprocessor = joblib.load('preprocessor.joblib')
         
-        # Muat model XGBoost
         xgb_model = xgb.XGBClassifier()
         xgb_model.load_model('xgb_model.json')
         
         return preprocessor, xgb_model
     except FileNotFoundError as e:
-        st.error(f"Error memuat file model: {e}. Pastikan 'preprocessor.joblib' dan 'xgb_model.json' ada di folder yang sama.")
+        st.error(f"Error memuat file model: {e}. Pastikan file 'preprocessor.joblib' dan 'xgb_model.json' berada di folder yang sama dengan file app.py Anda.")
         return None, None
 
 preprocessor, model = load_assets()

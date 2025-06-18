@@ -3,6 +3,7 @@ import pandas as pd
 import joblib
 import numpy as np
 import xgboost as xgb
+import os  # Tambahkan untuk penanganan path
 
 # --- KONFIGURASI HALAMAN ---
 st.set_page_config(
@@ -20,15 +21,25 @@ boolean_map = {'Yes': 1, 'No': 0}
 @st.cache_resource
 def load_assets():
     try:
-        preprocessor = joblib.load('.\src\preprocessor.joblib')
+        # Gunakan path absolut dengan forward slash
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        
+        # Path untuk file preprocessor
+        preprocessor_path = os.path.join(base_path, 'src', 'preprocessor.joblib')
+        model_path = os.path.join(base_path, 'src', 'xgb_model.json')
+        
+        # Debugging: Tampilkan path yang digunakan
+        st.info(f"Mencoba memuat model dari: {preprocessor_path}")
+        
+        preprocessor = joblib.load(preprocessor_path)
         
         # Muat model XGBoost
         xgb_model = xgb.XGBClassifier()
-        xgb_model.load_model('./src/xgb_model.json')
+        xgb_model.load_model(model_path)
         
         return preprocessor, xgb_model
-    except FileNotFoundError as e:
-        st.error(f"Error memuat file model: {e}. Pastikan 'preprocessor.joblib' dan 'xgb_model.json' ada di folder yang sama.")
+    except Exception as e:
+        st.error(f"Error memuat file model: {str(e)}")
         return None, None
 
 preprocessor, model = load_assets()

@@ -20,7 +20,7 @@ boolean_map = {'Yes': 1, 'No': 0}
 @st.cache_resource
 def load_assets():
     try:
-        preprocessor = joblib.load('src\preprocessor.joblib')
+        preprocessor = joblib.load('src/preprocessor.joblib')
         
         # Muat model XGBoost
         xgb_model = xgb.XGBClassifier()

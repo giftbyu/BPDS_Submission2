@@ -3,9 +3,8 @@ import numpy as np
 import pandas as pd
 import joblib
 import xgboost as xgb
-import sklearn.compose._column_transformer  # Impor penting untuk monkey patching
+import sklearn.compose._column_transformer  
 
-# --- FIX 1: Monkey patching untuk masalah _RemainderColsList ---
 if not hasattr(sklearn.compose._column_transformer, '_RemainderColsList'):
     class _RemainderColsList(list):
         def __init__(self, *args, **kwargs):
@@ -13,51 +12,42 @@ if not hasattr(sklearn.compose._column_transformer, '_RemainderColsList'):
     
     sklearn.compose._column_transformer._RemainderColsList = _RemainderColsList
 
-# --- FIX 2: Impor Streamlit SETELAH monkey patching ---
 import streamlit as st
 
-# --- FIX 3: set_page_config HARUS menjadi perintah Streamlit pertama ---
 st.set_page_config(
     page_title="Prediksi Dropout Mahasiswa | Jaya Jaya Institut",
     page_icon="🎓",
     layout="wide"
 )
 
-# --- MAPPING DATA ---
+
 marital_status_map = {'Single': 1, 'Married': 2, 'Widower': 3, 'Divorced': 4, 'Facto Union': 5, 'Legally Separated': 6}
 gender_map = {'Male': 1, 'Female': 0}
 boolean_map = {'Yes': 1, 'No': 0}
 
-# --- FIX 4: Gunakan joblib untuk memuat model XGBoost ---
 @st.cache_resource
 def load_assets():
     try:
-        # Gunakan path absolut
+
         base_path = os.path.dirname(os.path.abspath(__file__))
         preprocessor_path = os.path.join(base_path, 'src', 'preprocessor.joblib')
-        model_path = os.path.join(base_path, 'src', 'xgb_model.joblib')  # Ubah ke format joblib
+        model_path = os.path.join(base_path, 'src', 'xgb_model.joblib')  
         
-        # Muat preprocessor
         preprocessor = joblib.load(preprocessor_path)
         
-        # Muat model XGBoost dengan joblib
         xgb_model = joblib.load(model_path)
         
         return preprocessor, xgb_model
     except Exception as e:
-        # Jangan gunakan st.error di sini karena mungkin dieksekusi sebelum UI
         print(f"Error memuat model: {str(e)}")
         return None, None
 
-# --- TAMPILAN APLIKASI ---
 st.title("🎓 Sistem Peringatan Dini Dropout Mahasiswa")
 st.markdown("Selamat datang di sistem peringatan dini Jaya Jaya Institut.")
 
-# Muat model SETELAH menampilkan judul
 preprocessor, model = load_assets()
 
 if model and preprocessor:
-    # --- INPUT FORM ---
     st.header("Masukkan Data Mahasiswa")
     col1, col2, col3 = st.columns(3)
     
@@ -80,14 +70,12 @@ if model and preprocessor:
         marital_status_text = st.selectbox('Status Pernikahan', list(marital_status_map.keys()))
 
     if st.button('Analisis Risiko Mahasiswa', type="primary", use_container_width=True):
-        # Konversi input
         tuition_fees_up_to_date = boolean_map[tuition_fees_up_to_date_text]
         scholarship_holder = boolean_map[scholarship_holder_text]
         debtor = boolean_map[debtor_text]
         gender = gender_map[gender_text]
         marital_status = marital_status_map[marital_status_text]
         
-        # Buat dictionary untuk input (HANYA fitur yang diperlukan)
         input_data = {
             'Marital_status': [marital_status],
             'Admission_grade': [admission_grade],
@@ -100,11 +88,8 @@ if model and preprocessor:
             'Debtor': [debtor]
         }
         
-        # Buat DataFrame
         input_df = pd.DataFrame(input_data)
         
-        # --- FIX 5: Tambahkan fitur yang hilang dengan nilai default ---
-        # Daftar fitur yang diperlukan oleh model
         required_features = [
             'Marital_status', 'Application_mode', 'Application_order', 'Course',
             'Daytime_evening_attendance', 'Previous_qualification',
@@ -121,22 +106,18 @@ if model and preprocessor:
             'Curricular_units_2nd_sem_grade', 'Curricular_units_2nd_sem_without_evaluations',
             'Unemployment_rate', 'Inflation_rate', 'GDP'
         ]
-        
-        # Tambahkan fitur yang hilang dengan nilai default
+
         for feature in required_features:
             if feature not in input_df.columns:
-                # Gunakan nilai default yang sesuai
                 if feature in ['Curricular_units_1st_sem_grade', 'Curricular_units_2nd_sem_grade']:
-                    input_df[feature] = 12.0  # Nilai rata-rata
+                    input_df[feature] = 12.0  
                 elif feature in ['Age_at_enrollment', 'Application_order']:
-                    input_df[feature] = 20  # Nilai umum
+                    input_df[feature] = 20 
                 else:
-                    input_df[feature] = 0  # Default untuk fitur lainnya
+                    input_df[feature] = 0  
         
-        # Pastikan urutan kolom sesuai dengan yang diharapkan model
         input_df = input_df[required_features]
         
-        # Transformasi & prediksi
         try:
             data_transformed = preprocessor.transform(input_df)
             prediction_encoded = model.predict(data_transformed)[0]
@@ -144,8 +125,7 @@ if model and preprocessor:
             
             status_map_decode = {0: 'Dropout', 1: 'Enrolled', 2: 'Graduate'}
             prediction_label = status_map_decode[prediction_encoded]
-            
-            # Tampilkan hasil
+
             st.header("Hasil Analisis")
             res_col1, res_col2 = st.columns(2)
             

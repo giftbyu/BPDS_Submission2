@@ -1,18 +1,28 @@
-# --- FUNGSI UNTUK MEMUAT MODEL & PREPROCESSOR ---
-import streamlit as st
+import os
+import numpy as np
 import pandas as pd
 import joblib
-import numpy as np
 import xgboost as xgb
-import os  # Tambahkan untuk penanganan path
+import sklearn.compose._column_transformer  # Pastikan diimpor sebelum streamlit
 
-# --- KONFIGURASI HALAMAN ---
+# --- FIX FOR SKLEARN VERSION MISMATCH ---
+# Monkey patching untuk versi scikit-learn <1.3
+if not hasattr(sklearn.compose._column_transformer, '_RemainderColsList'):
+    class _RemainderColsList(list):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+    
+    sklearn.compose._column_transformer._RemainderColsList = _RemainderColsList
+
+# --- PERINTAH STREAMLIT PERTAMA HARUS SET_PAGE_CONFIG ---
+import streamlit as st
 st.set_page_config(
     page_title="Prediksi Dropout Mahasiswa | Jaya Jaya Institut",
     page_icon="🎓",
     layout="wide"
 )
 
+# --- KODE BERIKUTNYA ---
 # --- MAPPING DATA SESUAI README.MD ---
 marital_status_map = {'Single': 1, 'Married': 2, 'Widower': 3, 'Divorced': 4, 'Facto Union': 5, 'Legally Separated': 6}
 gender_map = {'Male': 1, 'Female': 0}
@@ -22,16 +32,11 @@ boolean_map = {'Yes': 1, 'No': 0}
 @st.cache_resource
 def load_assets():
     try:
-        # Gunakan path absolut dengan forward slash
         base_path = os.path.dirname(os.path.abspath(__file__))
-        
-        # Path untuk file preprocessor
         preprocessor_path = os.path.join(base_path, 'src', 'preprocessor.joblib')
         model_path = os.path.join(base_path, 'src', 'xgb_model.json')
         
-        # Debugging: Tampilkan path yang digunakan
-        st.info(f"Mencoba memuat model dari: {preprocessor_path}")
-        
+        # Muat preprocessor
         preprocessor = joblib.load(preprocessor_path)
         
         # Muat model XGBoost
@@ -40,15 +45,18 @@ def load_assets():
         
         return preprocessor, xgb_model
     except Exception as e:
-        st.error(f"Error memuat file model: {str(e)}")
+        # JANGAN gunakan st.error di sini karena akan dieksekusi sebelum set_page_config
+        print(f"Error memuat model: {str(e)}")
         return None, None
 
-preprocessor, model = load_assets()
 # --- TAMPILAN APLIKASI ---
-if model and preprocessor:
-    st.title("🎓 Sistem Peringatan Dini Dropout Mahasiswa")
-    st.markdown("Selamat datang di sistem peringatan dini Jaya Jaya Institut. Masukkan data mahasiswa di bawah untuk mendapatkan prediksi status dan skor risiko.")
+st.title("🎓 Sistem Peringatan Dini Dropout Mahasiswa")
+st.markdown("Selamat datang di sistem peringatan dini Jaya Jaya Institut.")
 
+# Muat assets SETELAH konfigurasi halaman
+preprocessor, model = load_assets()
+
+if model and preprocessor:
     # --- INPUT DARI PENGGUNA ---
     st.header("Masukkan Data Mahasiswa")
     col1, col2, col3 = st.columns(3)
@@ -89,48 +97,40 @@ if model and preprocessor:
             'Curricular_units_2nd_sem_grade': [curricular_units_2nd_sem_grade], 'Debtor': [debtor]
         }
         
-        # Dapatkan daftar lengkap kolom fitur dari preprocessor
-        # Ini lebih andal daripada membaca CSV lagi
-        cat_features = preprocessor.transformers_[1][2]
-        num_features = preprocessor.transformers_[0][2]
-        all_features = num_features + cat_features
-
-        # Isi nilai default untuk fitur yang tidak ada di form
-        df_defaults = pd.read_csv('data.csv', delimiter=';')
-        for col in all_features:
-            if col not in input_data:
-                input_data[col] = [df_defaults[col].median()]
-        
+        # Buat DataFrame
         input_df = pd.DataFrame(input_data)
         
-        # --- PROSES PREDIKSI 2 LANGKAH ---
-        # 1. Transformasi data menggunakan preprocessor
-        data_transformed = preprocessor.transform(input_df)
-        
-        # 2. Lakukan prediksi menggunakan model XGBoost
-        prediction_encoded = model.predict(data_transformed)[0]
-        prediction_proba = model.predict_proba(data_transformed)[0]
-        
-        status_map_decode = {0: 'Dropout', 1: 'Enrolled', 2: 'Graduate'}
-        prediction_label = status_map_decode[prediction_encoded]
-        
-        # Tampilkan hasil
-        st.header("Hasil Analisis")
-        res_col1, res_col2 = st.columns(2)
-        
-        with res_col1:
-            if prediction_label == 'Dropout':
-                st.metric(label="**Prediksi Status**", value=prediction_label, delta=f"{prediction_proba[0]:.0%} Confidence", delta_color="inverse")
-            elif prediction_label == 'Enrolled':
-                st.metric(label="**Prediksi Status**", value=prediction_label, delta_color="off")
-            else:
-                st.metric(label="**Prediksi Status**", value=prediction_label, delta=f"{prediction_proba[2]:.0%} Confidence", delta_color="normal")
-        
-        with res_col2:
-            dropout_risk = prediction_proba[0] * 100
-            st.metric(label="**Skor Risiko Dropout**", value=f"{dropout_risk:.2f}%")
+        # Transformasi & prediksi
+        try:
+            data_transformed = preprocessor.transform(input_df)
+            prediction_encoded = model.predict(data_transformed)[0]
+            prediction_proba = model.predict_proba(data_transformed)[0]
+            
+            status_map_decode = {0: 'Dropout', 1: 'Enrolled', 2: 'Graduate'}
+            prediction_label = status_map_decode[prediction_encoded]
+            
+            # Tampilkan hasil
+            st.header("Hasil Analisis")
+            res_col1, res_col2 = st.columns(2)
+            
+            with res_col1:
+                if prediction_label == 'Dropout':
+                    st.metric(label="**Prediksi Status**", value=prediction_label, delta=f"{prediction_proba[0]:.0%} Confidence", delta_color="inverse")
+                elif prediction_label == 'Enrolled':
+                    st.metric(label="**Prediksi Status**", value=prediction_label, delta_color="off")
+                else:
+                    st.metric(label="**Prediksi Status**", value=prediction_label, delta=f"{prediction_proba[2]:.0%} Confidence", delta_color="normal")
+            
+            with res_col2:
+                dropout_risk = prediction_proba[0] * 100
+                st.metric(label="**Skor Risiko Dropout**", value=f"{dropout_risk:.2f}%")
 
-        if prediction_label == 'Dropout':
-            st.error("REKOMENDASI: Mahasiswa ini menunjukkan risiko tinggi untuk dropout. Disarankan untuk segera memberikan bimbingan dan konseling khusus.", icon="🚨")
-        else:
-            st.success("REKOMENDASI: Mahasiswa ini berada di jalur yang aman. Lanjutkan pemantauan reguler.", icon="✅")
+            if prediction_label == 'Dropout':
+                st.error("REKOMENDASI: Mahasiswa ini menunjukkan risiko tinggi untuk dropout. Disarankan untuk segera memberikan bimbingan dan konseling khusus.", icon="🚨")
+            else:
+                st.success("REKOMENDASI: Mahasiswa ini berada di jalur yang aman. Lanjutkan pemantauan reguler.", icon="✅")
+                
+        except Exception as e:
+            st.error(f"Error dalam pemrosesan data: {str(e)}")
+else:
+    st.error("Gagal memuat model. Silakan cek log server untuk detailnya.")

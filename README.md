@@ -2,9 +2,10 @@
 
 Laporan ini merangkum analisis komprehensif dan pengembangan model prediktif untuk mengatasi masalah *student dropout* di Jaya Jaya Institut. Dengan memanfaatkan data historis mahasiswa, proyek ini bertujuan untuk mengidentifikasi mahasiswa yang berisiko dan memberikan rekomendasi tindakan proaktif.
 
-## 1\.  Business Understanding
+## 1\. Business Understanding
 
 ### Latar Belakang Bisnis
+
 Jaya Jaya Institut adalah sebuah institusi pendidikan tinggi dengan reputasi yang sangat baik dan telah berdiri sejak tahun 2000. Meskipun telah mencetak banyak lulusan berkualitas, institusi ini menghadapi tantangan signifikan terkait tingginya angka mahasiswa yang tidak menyelesaikan pendidikan (dropout). Tingkat dropout yang tinggi tidak hanya berdampak pada reputasi institusi, tetapi juga pada stabilitas finansial dan moral akademik secara keseluruhan. Oleh karena itu, pihak manajemen ingin mengatasi masalah ini secara proaktif dengan memanfaatkan pendekatan berbasis data.
 
 ### Permasalahan Bisnis
@@ -27,7 +28,47 @@ Proyek ini dirancang untuk memberikan solusi berbasis data dengan cakupan sebaga
 ### Persiapan
 
   - **Sumber Data**: Dataset yang digunakan berasal dari "Predict students' dropout and academic success," yang berisi 4424 data mahasiswa dengan 37 atribut, termasuk informasi demografis, sosioekonomi, dan akademik. Variabel target adalah kolom `Status`.
-  - **Setup *Environment***: Proyek ini dikembangkan menggunakan Python dengan *library* seperti `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `seaborn`, `joblib`, dan `streamlit`.
+  - **Setup *Environment***: Proyek ini dikembangkan menggunakan Python dengan *library* seperti `pandas`, `numpy`, `scikit-learn`, `matplotlib`, `seaborn`, `joblib`, dan `streamlit`. Untuk mereplikasi lingkungan kerja, ikuti instruksi di bawah ini.
+
+#### Membuat dan Mengaktifkan Virtual Environment
+
+Instruksi ini akan membantu menciptakan lingkungan pengembangan yang terisolasi dan stabil. Pilih salah satu metode (venv atau conda).
+
+**Opsi 1: Menggunakan `venv`**
+
+  - **Buat sebuah virtual environment:**
+    ```bash
+    python -m venv venv
+    ```
+  - **Aktifkan virtual environment:**
+      - Di Windows:
+        ```bash
+        .\venv\Scripts\activate
+        ```
+      - Di macOS/Linux:
+        ```bash
+        source venv/bin/activate
+        ```
+
+**Opsi 2: Menggunakan `conda`**
+
+  - **Buat sebuah conda environment baru (misalnya, dengan nama `proyek_akhir`):**
+    ```bash
+    conda create --name proyek_akhir python=3.9
+    ```
+  - **Aktifkan conda environment:**
+    ```bash
+    conda activate proyek_akhir
+    ```
+
+#### Menginstal Dependensi dari `requirements.txt`
+
+Untuk memastikan semua pustaka yang dibutuhkan tersedia, instal dependensi menggunakan `pip` setelah mengaktifkan virtual environment Anda.
+
+  - **Jalankan perintah berikut di terminal Anda:**
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ## 2\. Analisis Data (EDA)
 
@@ -98,19 +139,38 @@ Analisis ini mengidentifikasi faktor-faktor yang paling berpengaruh dalam predik
 
 Sebuah *dashboard* interaktif dibuat untuk membantu Jaya Jaya Institut memonitor performa mahasiswa dan menganalisis faktor-faktor kunci yang memengaruhi tingkat kelulusan dan *dropout*.
 
+![alt text](image.png)
+
   - **Isi *Dashboard***:
       - **KPI Utama**: Tingkat *Dropout* (32.12%), Tingkat Kelulusan (49.93%), dan Total Mahasiswa (4.424).
-      - **Distribusi Status**: Diagram pai yang menunjukkan proporsi *Graduate*, *Dropout*, dan *Enrolled*.
+      - **Distribusi Status**: Diagram pai yang menunjukkan proporsi *Graduate* (49.9%), *Dropout* (32.1%), dan *Enrolled* (17.9%).
       - **Analisis Akademik dan Keuangan**: Grafik yang membandingkan rata-rata nilai dan status pembayaran UKT di antara ketiga kelompok mahasiswa.
+
+**Link untuk Mengakses Dashboard dengan Looker Studio:** [https://lookerstudio.google.com/reporting/9fda9bed-0922-4709-a194-65c50c82cd32](https://lookerstudio.google.com/reporting/9fda9bed-0922-4709-a194-65c50c82cd32)
+
+-----
 
 ### Sistem *Machine Learning*
 
-Sebuah prototipe aplikasi web dikembangkan menggunakan Streamlit untuk prediksi risiko *dropout* secara *real-time*.
+Sebagai solusi praktis, sebuah prototipe aplikasi web telah dikembangkan menggunakan Streamlit. Aplikasi ini memungkinkan staf akademik atau dosen wali untuk memasukkan data seorang mahasiswa dan mendapatkan prediksi statusnya secara instan.
 
-  - **Cara Menjalankan**: Aplikasi ini memungkinkan pengguna (seperti dosen) memasukkan data mahasiswa dan mendapatkan prediksi status beserta skor risiko *dropout*.
+![alt text](image-1.png)
+
+**Cara Menjalankan Prototipe:**
+
+1.  **Melalui Link Cloud (Direkomendasikan):**
+    Aplikasi ini telah di-*deploy* ke Streamlit Community Cloud dan dapat diakses oleh siapa saja melalui link berikut tanpa perlu instalasi:
+
+    **Link Aplikasi:** [https://bpdssubmission2-muexpsh6c9wvzebbgwe2ew.streamlit.app](https://bpdssubmission2-muexpsh6c9wvzebbgwe2ew.streamlit.app)
+
+2.  **Menjalankan Secara Lokal:**
+    Jika ingin menjalankan di komputer lokal, pastikan Anda sudah melakukan setup environment sesuai file `requirements.txt` lalu melakukan instalasi dengan `pip install -r requirements.txt`. Buka terminal di dalam folder proyek dan jalankan perintah berikut:
+
     ```bash
     streamlit run app.py
     ```
+
+-----
 
 ## 7\. Kesimpulan dan Rekomendasi
 
@@ -124,6 +184,14 @@ Proyek ini berhasil mengembangkan solusi berbasis data yang dapat membantu Jaya 
 
 ### Rekomendasi Tindakan
 
-1.  **Implementasi Sistem Peringatan Dini Akademik**: Gunakan prototipe yang ada untuk menandai mahasiswa dengan nilai di bawah ambang batas pada semester pertama dan wajibkan sesi konseling dengan dosen wali.
-2.  **Program Dukungan Keuangan Proaktif**: Manfaatkan data pembayaran UKT untuk mengidentifikasi mahasiswa yang kesulitan secara finansial dan tawarkan solusi bantuan sebelum mereka menunggak.
-3.  **Program *Mentoring* untuk Mahasiswa Non-Tradisional**: Buat program pendampingan yang menghubungkan mahasiswa yang lebih tua dengan senior atau alumni untuk membantu mereka beradaptasi.
+Berdasarkan kesimpulan di atas, berikut adalah beberapa rekomendasi tindakan yang dapat segera diambil oleh Jaya Jaya Institut:
+
+1.  **Implementasi Sistem Peringatan Dini Akademik**:
+      - **Aksi**: Gunakan prototipe aplikasi prediksi untuk secara otomatis menandai mahasiswa yang mendapatkan nilai di bawah ambang batas tertentu pada semester pertama, terutama pada fitur `Curricular_units_1st_sem_grade` dan `Curricular_units_2nd_sem_grade`.
+      - **Detail Teknis**: Sistem dapat diintegrasikan dengan *Learning Management System* (LMS) untuk mengirim notifikasi otomatis kepada dosen wali ketika seorang mahasiswa teridentifikasi berisiko tinggi (misalnya, probabilitas *dropout* \> 70%). Dosen wali dari mahasiswa yang ditandai wajib melakukan sesi konseling satu-satu untuk membahas tantangan belajar, memvalidasi data, dan menyusun rencana studi yang lebih personal.
+2.  **Program Dukungan Keuangan Proaktif**:
+      - **Aksi**: Bagian administrasi keuangan harus secara aktif menggunakan *dashboard* untuk memonitor mahasiswa yang status `Tuition_fees_up_to_date` berubah menjadi `No` atau yang status `Debtor` menjadi `Yes`.
+      - **Detail Teknis**: Daripada menunggu mahasiswa menunggak, sistem dapat memicu pengiriman email atau notifikasi yang menawarkan opsi bantuan keuangan, skema cicilan yang lebih fleksibel, atau informasi beasiswa yang relevan. Analisis lebih lanjut pada *dashboard* dapat menunjukkan korelasi antara program studi tertentu dengan kesulitan finansial.
+3.  **Program Mentoring dan Fleksibilitas untuk Mahasiswa Non-Tradisional**:
+      - **Aksi**: Mengingat mahasiswa yang lebih tua atau yang memiliki status pernikahan berbeda (misalnya, *Married*, *Divorced*) memiliki risiko lebih tinggi, buatlah program dukungan yang lebih fleksibel.
+      - **Detail Teknis**: Tawarkan program mentoring yang menghubungkan mereka dengan mahasiswa senior atau alumni berlatar belakang serupa. Selain itu, sediakan opsi kelas malam atau akhir pekan (*Daytime/evening attendance*) dan materi pembelajaran asinkron (rekaman kuliah) untuk mengakomodasi jadwal mereka yang mungkin lebih padat karena tanggung jawab keluarga atau pekerjaan.

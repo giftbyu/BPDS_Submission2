@@ -139,7 +139,7 @@ Analisis ini mengidentifikasi faktor-faktor yang paling berpengaruh dalam predik
 
 Sebuah *dashboard* interaktif dibuat untuk membantu Jaya Jaya Institut memonitor performa mahasiswa dan menganalisis faktor-faktor kunci yang memengaruhi tingkat kelulusan dan *dropout*.
 
-![alt text](image.png)
+![alt text](image-2.png)
 
   - **Isi *Dashboard***:
       - **KPI Utama**: Tingkat *Dropout* (32.12%), Tingkat Kelulusan (49.93%), dan Total Mahasiswa (4.424).
@@ -176,11 +176,32 @@ Sebagai solusi praktis, sebuah prototipe aplikasi web telah dikembangkan menggun
 
 Proyek ini berhasil mengembangkan solusi berbasis data yang dapat membantu Jaya Jaya Institut dalam mengatasi masalah *student dropout*.
 
-### Kesimpulan Utama
+### **Kesimpulan**
 
-1.  **Faktor Prediktor Kunci**: Kinerja akademik awal dan status keuangan adalah prediktor paling signifikan untuk *dropout*. Mahasiswa dengan nilai rendah dan masalah pembayaran UKT memiliki risiko tertinggi.
-2.  **Efektivitas Model**: Model *XGBoost* yang dikembangkan memiliki akurasi 76% dan *recall* 73% untuk kelas 'Dropout', yang sangat penting untuk tujuan intervensi dini.
-3.  **Usia Saat Masuk**: Mahasiswa yang lebih tua saat mendaftar menunjukkan kecenderungan *dropout* yang sedikit lebih tinggi.
+Proyek ini berhasil menjawab permasalahan bisnis utama yang dihadapi oleh Jaya Jaya Institut terkait tingginya angka *dropout* dengan mengidentifikasi secara spesifik karakteristik mahasiswa yang berisiko dan mengembangkan solusi teknis untuk intervensi dini. Analisis mendalam terhadap data historis mengungkapkan profil yang jelas mengenai mahasiswa yang cenderung tidak menyelesaikan studi mereka.
+
+#### **Karakteristik Utama Mahasiswa Berisiko *Dropout***
+
+Berdasarkan analisis data eksploratif dan hasil *feature importance* dari model *machine learning*, ditemukan tiga karakteristik utama yang menjadi prediktor terkuat bagi seorang mahasiswa untuk *dropout*:
+
+1.  **Kinerja Akademik di Awal Perkuliahan adalah Faktor Dominan**: Ini adalah faktor paling berpengaruh. Mahasiswa yang menunjukkan nilai rendah pada semester pertama dan kedua (`Curricular_units_1st_sem_grade` dan `Curricular_units_2nd_sem_grade`) memiliki risiko *dropout* tertinggi. Temuan ini diperkuat oleh fakta bahwa jumlah SKS yang disetujui (`Curricular_units_2nd_sem_approved`) juga menjadi salah satu fitur paling penting. Analisis *outlier* juga menunjukkan adanya sejumlah besar mahasiswa dengan nilai yang sangat rendah, yang memperkuat kesimpulan ini.
+
+2.  **Status Keuangan sebagai Indikator Kritis**: Analisis bivariat secara jelas menunjukkan bahwa mahasiswa yang tidak membayar Uang Kuliah Tepat Waktu (`Tuition_fees_up_to_date = 0`) dan memiliki status sebagai penunggak utang (`Debtor = 1`) memiliki proporsi *dropout* yang sangat tinggi. Hal ini mengindikasikan bahwa kesulitan finansial adalah pemicu kuat yang memaksa mahasiswa untuk berhenti studi.
+
+3.  **Faktor Demografis seperti Usia**: Mahasiswa yang mendaftar pada usia yang lebih tua (`Age_at_enrollment`) menunjukkan kecenderungan *dropout* yang sedikit lebih tinggi. Ini menandakan bahwa mahasiswa non-tradisional mungkin menghadapi tantangan eksternal tambahan (seperti pekerjaan atau keluarga) yang memengaruhi kemampuan mereka untuk fokus pada studi.
+
+#### **Validasi Melalui Model Prediktif**
+
+Karakteristik di atas telah divalidasi melalui pengembangan model prediktif XGBoost. Model ini berhasil mencapai **akurasi keseluruhan 76%** dan yang lebih penting, **tingkat *recall* sebesar 73% untuk kelas 'Dropout'**.
+
+-   **Implikasi**: Tingkat *recall* ini sangat krusial karena berarti model mampu **mengidentifikasi 73 dari 100 mahasiswa** yang sebenarnya akan *dropout*. Kemampuan ini memberikan pihak institut alat yang kuantitatif dan andal untuk melakukan intervensi dini sebelum mahasiswa tersebut secara resmi mengundurkan diri.
+
+#### **Implikasi untuk Jaya Jaya Institut**
+
+Solusi yang dikembangkan—*dashboard* interaktif dan prototipe aplikasi web—secara langsung menjawab kebutuhan institusi untuk sistem monitoring terpusat dan alat identifikasi risiko. Dengan temuan ini, Jaya Jaya Institut tidak lagi perlu bertindak reaktif, melainkan dapat secara proaktif menyusun strategi retensi yang berfokus pada:
+- **Bimbingan akademik intensif** bagi mahasiswa dengan nilai rendah di awal semester.
+- **Program bantuan keuangan yang fleksibel** bagi mereka yang menunjukkan tanda-tanda kesulitan pembayaran.
+- **Dukungan khusus** bagi mahasiswa non-tradisional untuk membantu mereka menyeimbangkan antara studi dan tanggung jawab lainnya.
 
 ### Rekomendasi Tindakan
 
